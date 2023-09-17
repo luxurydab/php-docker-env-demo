@@ -1,0 +1,10 @@
+!.gitignore
+.idea
+.vscode/
+.DS_Store
+.git
+/docker-compose.yml
+/docker-stack.yml
+/Dockerfile
+/minikube.yaml
+/README.md

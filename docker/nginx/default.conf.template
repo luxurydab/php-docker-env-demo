@@ -1,0 +1,45 @@
+upstream php-upstream {
+    server ${PHP_HOST}:${PHP_PORT};
+}
+
+server {
+    listen ${NGINX_PORT} default_server;
+    listen [::]:${NGINX_PORT} default_server;
+    root ${NGINX_ROOT};
+
+    location / {
+        index  index.php index.html;
+    }
+
+    location ~ ^.+\.php(?:/.*)?$ {
+        fastcgi_pass php-upstream;
+        include                     fastcgi_params;
+        fastcgi_split_path_info ^(.+?\.php)(/.*)$;
+        if ($uri ~ ^(?<script_name>.+\.php)?(?<path_info>/.*)?$) {}
+        set $path_info_final $path_info;
+        if ($fastcgi_path_info != '')
+        {
+            set $path_info_final $fastcgi_path_info;
+        }
+        fastcgi_param               PATH_INFO $path_info_final;
+        set $script_name_final '/index.php';
+        if ($script_name != '')
+        {
+            set $script_name_final $script_name;
+        }
+        fastcgi_param               SCRIPT_FILENAME $document_root$script_name_final;
+        if (!-e $document_root$script_name_final) {
+            return 404;
+        }
+        fastcgi_param               SCRIPT_NAME $script_name_final;
+        set $request_uri_final $request_uri;
+        if ($path_info_final != '') {
+            set $request_uri_final $path_info_final$is_args$args;
+        }
+        fastcgi_param               REQUEST_URI         $request_uri_final;
+        fastcgi_index               index.php;
+        fastcgi_next_upstream       error timeout;
+        fastcgi_keep_conn           on;
+        fastcgi_hide_header         "X-Powered-By";
+    }
+}

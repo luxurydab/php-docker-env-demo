@@ -1,0 +1,37 @@
+version: "3.9"
+services:
+    nginx:
+      image: nginx:stable
+      environment:
+          NGINX_ENVSUBST_TEMPLATE_DIR: /var/www/app/docker/nginx
+          NGINX_ENVSUBST_TEMPLATE_SUFFIX: .template
+          NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx/conf.d
+          NGINX_PORT: 8080
+          NGINX_ROOT: /var/www/app/public
+          PHP_HOST: php
+          PHP_PORT: 9000
+      working_dir: /var/www/app/
+      volumes:
+          - ".:/var/www/app/"
+      networks:
+          - local
+      depends_on:
+          - php
+      ports:
+          - "8080:8080"
+    php:
+      image: php:8.2.6-fpm-alpine
+      working_dir: /var/www/app/
+      volumes:
+          - ".:/var/www/app/"
+      networks:
+          - local
+
+networks:
+    local:
+      name: local
+
+volumes:
+    app_data:
+        driver: local
+

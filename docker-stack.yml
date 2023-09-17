@@ -1,0 +1,67 @@
+version: "3.9"
+services:
+    nginx:
+        image: nginx:stable
+        environment:
+            NGINX_ENVSUBST_TEMPLATE_DIR: /var/www/app/docker/nginx
+            NGINX_ENVSUBST_TEMPLATE_SUFFIX: .template
+            NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx/conf.d
+            NGINX_PORT: 80
+            NGINX_ROOT: /var/www/app/public
+            PHP_HOST: php
+            PHP_PORT: 9000
+        working_dir: /var/www/app/
+        volumes:
+            - "app_data:/var/www/app"
+        networks:
+            - swarm
+        depends_on:
+            - php
+            - code
+        ports:
+            - "80:80"
+        deploy:
+            mode: global
+            update_config:
+                parallelism: 0
+                delay: 3s
+            restart_policy:
+                condition: any
+    php:
+        image: php:8.2.6-fpm-alpine
+        working_dir: /var/www/app
+        volumes:
+            - "app_data:/var/www/app"
+        networks:
+            - swarm
+        depends_on:
+            - code
+        deploy:
+            mode: global
+            update_config:
+                parallelism: 0
+                delay: 1s
+            restart_policy:
+                condition: any
+    code:
+        image: luxurydab/php-docker-env-demo-code:latest
+        environment:
+            DEST_FOLDER: /var/www/app
+        volumes:
+            - "app_data:/var/www/app"
+        networks:
+            - swarm
+        deploy:
+            mode: global
+            update_config:
+                parallelism: 0
+                delay: 0s
+            restart_policy:
+                condition: none
+
+networks:
+    swarm:
+
+volumes:
+    app_data:
+

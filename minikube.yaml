@@ -1,0 +1,117 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: nginx
+  template:
+    metadata:
+      labels:
+        service: nginx
+    spec:
+      volumes:
+        - name: code-storage
+          emptyDir: {}
+      initContainers:
+        - name: code
+          image: luxurydab/php-docker-env-demo-code:latest
+          imagePullPolicy: Always
+          env:
+            - name: DEST_FOLDER
+              value: "/var/www/app"
+          volumeMounts:
+            - mountPath: /var/www/app
+              name: code-storage
+      containers:
+        - name: nginx
+          image: nginx:stable
+          imagePullPolicy: Always
+          workingDir: /var/www/app
+          ports:
+            - containerPort: 80
+          env:
+            - name: NGINX_ENVSUBST_TEMPLATE_DIR
+              value: "/var/www/app/docker/nginx"
+            - name: NGINX_ENVSUBST_TEMPLATE_SUFFIX
+              value: ".template"
+            - name: NGINX_ENVSUBST_OUTPUT_DIR
+              value: "/etc/nginx/conf.d"
+            - name: NGINX_PORT
+              value: "80"
+            - name: NGINX_ROOT
+              value: "/var/www/app/public"
+            - name: PHP_HOST
+              value: "php"
+            - name: PHP_PORT
+              value: "9000"
+          volumeMounts:
+            - mountPath: /var/www/app
+              name: code-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  selector:
+    service: nginx
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: php
+  template:
+    metadata:
+      labels:
+        service: php
+    spec:
+      volumes:
+        - name: code-storage
+          emptyDir: {}
+      initContainers:
+        - name: code
+          image: luxurydab/php-docker-env-demo-code:latest
+          imagePullPolicy: Always
+          env:
+            - name: DEST_FOLDER
+              value: "/var/www/app"
+          volumeMounts:
+            - mountPath: /var/www/app
+              name: code-storage
+      containers:
+        - name: php
+          image: php:8.2.6-fpm-alpine
+          imagePullPolicy: Always
+          workingDir: /var/www/app
+          ports:
+            - containerPort: 9000
+          volumeMounts:
+            - mountPath: /var/www/app
+              name: code-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php
+spec:
+  selector:
+    service: php
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 9000
+      targetPort: 9000
