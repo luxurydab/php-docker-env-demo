@@ -1,6 +1,8 @@
 # PHP Dockerization Demo
 
-How to Dockerize a PHP application in different environments 
+How to Dockerize a PHP application in different environments
+
+Materials for the article https://lohvynenko.com/en/blog/php-inside-docker-environment.html
 
 ## Requirements
 
